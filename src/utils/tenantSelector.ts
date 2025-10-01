@@ -27,7 +27,7 @@ export async function selectTenant(tenants: TenantInfo[]): Promise<string | null
   console.log('🏢 AVAILABLE TENANTS');
   console.log('='.repeat(70) + '\n');
 
-  const choices = tenants.map((tenant, index) => ({
+  const choices = tenants.map((tenant) => ({
     title: `${tenant.displayName} (${tenant.defaultDomain})`,
     value: tenant.id,
     description: `Tenant ID: ${tenant.id}`,

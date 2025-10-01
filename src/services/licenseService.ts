@@ -5,6 +5,7 @@
 import { Client } from '@microsoft/microsoft-graph-client';
 import { LicenseSku, LicenseDetails, AssignedLicense } from '../types';
 import { retryWithBackoff, RetryOptions } from '../utils/retry';
+import { SkuMappingService } from './skuMappingService';
 
 /**
  * LicenseService manages license SKU mapping and retrieval
@@ -13,16 +14,21 @@ export class LicenseService {
   private licenseSkuMap: Map<string, LicenseSku> = new Map();
   private client: Client;
   private retryOptions: RetryOptions;
+  private skuMappingService: SkuMappingService;
 
   constructor(client: Client, retryOptions: RetryOptions) {
     this.client = client;
     this.retryOptions = retryOptions;
+    this.skuMappingService = new SkuMappingService();
   }
 
   /**
-   * Build license SKU mapping cache
+   * Build license SKU mapping cache with friendly names
    */
   async buildLicenseSkuMap(): Promise<void> {
+    // First, fetch the friendly name mappings from Microsoft's CSV
+    await this.skuMappingService.buildSkuFriendlyNameMap();
+
     console.log('📦 Building license SKU mapping...');
 
     try {
@@ -32,10 +38,17 @@ export class LicenseService {
       );
 
       response.value.forEach((sku: any) => {
+        // Try to get friendly name from Microsoft's mapping
+        const friendlyName =
+          this.skuMappingService.getFriendlyNameByStringId(sku.skuPartNumber) ||
+          this.skuMappingService.getFriendlyNameByGuid(sku.skuId) ||
+          sku.skuPartNumber ||
+          sku.skuId;
+
         this.licenseSkuMap.set(sku.skuId, {
           skuId: sku.skuId,
           skuPartNumber: sku.skuPartNumber,
-          displayName: sku.skuPartNumber || sku.skuId,
+          displayName: friendlyName,
           servicePlans: sku.servicePlans,
         });
       });

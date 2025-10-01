@@ -205,6 +205,15 @@ export interface ProcessingStats {
 }
 
 /**
+ * SKU friendly name mapping from Microsoft CSV
+ */
+export interface SkuFriendlyNameMapping {
+  stringId: string; // e.g., "ENTERPRISEPACK"
+  guid: string; // e.g., "6fd2c87f-b296-42f0-b197-1e91e994b900"
+  productDisplayName: string; // e.g., "Office 365 E3"
+}
+
+/**
  * Configuration options
  */
 export interface Config {

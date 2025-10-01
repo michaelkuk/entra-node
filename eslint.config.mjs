@@ -46,6 +46,6 @@ export default [
     },
   },
   {
-    ignores: ['dist/', 'node_modules/', 'output/', '*.js', 'tests/**'],
+    ignores: ['dist/', 'node_modules/', 'output/', 'bundle/', '*.js', 'tests/**'],
   },
 ];

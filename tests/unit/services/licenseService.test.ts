@@ -6,6 +6,30 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { LicenseService } from '../../../src/services/licenseService';
 import { AssignedLicense } from '../../../src/types';
 
+// Mock the SkuMappingService module
+jest.mock('../../../src/services/skuMappingService', () => ({
+  SkuMappingService: class MockSkuMappingService {
+    async buildSkuFriendlyNameMap(): Promise<void> {
+      return Promise.resolve();
+    }
+
+    getFriendlyNameByStringId(stringId: string): string | undefined {
+      // Mock mappings for common SKUs used in tests
+      const mappings: Record<string, string> = {
+        ENTERPRISEPACK: 'Office 365 E3',
+        SPE_E5: 'Microsoft 365 E5',
+        ZEBRA_LICENSE: 'Zebra License',
+        ALPHA_LICENSE: 'Alpha License',
+      };
+      return mappings[stringId];
+    }
+
+    getFriendlyNameByGuid(_guid: string): string | undefined {
+      return undefined;
+    }
+  },
+}));
+
 // Mock the Client
 const mockClient = {
   api: jest.fn(),
@@ -155,7 +179,7 @@ describe('LicenseService', () => {
       ];
 
       const result = licenseService.getUserLicenseDetails(assignedLicenses);
-      expect(result.licenseSkus).toEqual(['ENTERPRISEPACK']);
+      expect(result.licenseSkus).toEqual(['Office 365 E3']); // Now returns friendly name
       expect(result.licenseCount).toBe(1);
       expect(result.servicePlans).toEqual(['EXCHANGE_S_ENTERPRISE', 'SHAREPOINTENTERPRISE']);
     });
@@ -185,7 +209,7 @@ describe('LicenseService', () => {
       expect(result.servicePlans).toEqual([]);
     });
 
-    it('should sort license SKUs and service plans', () => {
+    it('should sort license SKUs and service plans', async () => {
       const mockSkusMultiple = {
         value: [
           {
@@ -211,7 +235,7 @@ describe('LicenseService', () => {
 
       // Rebuild map with new data
       const newService = new LicenseService(mockClient as any, retryOptions);
-      newService.buildLicenseSkuMap();
+      await newService.buildLicenseSkuMap();
 
       const assignedLicenses: AssignedLicense[] = [
         { skuId: 'sku-1', disabledPlans: [] },
@@ -219,7 +243,8 @@ describe('LicenseService', () => {
       ];
 
       const result = newService.getUserLicenseDetails(assignedLicenses);
-      expect(result.licenseSkus[0] < result.licenseSkus[1]).toBe(true);
+      // Should be sorted: Alpha License comes before Zebra License
+      expect(result.licenseSkus).toEqual(['Alpha License', 'Zebra License']);
     });
   });
 });
