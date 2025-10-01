@@ -19,7 +19,7 @@ export const CONFIG: Config = {
     'Directory.Read.All',
   ],
   outputDir: './output',
-  maxConcurrency: 10, // Parallel requests
+  maxConcurrency: 20, // Parallel requests
   batchSize: 20, // Microsoft Graph batch limit
   maxRetries: 3,
   retryDelayMs: 2000,
